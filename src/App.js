@@ -1,24 +1,41 @@
-import logo from './logo.svg';
-import './App.css';
+import { InputField } from './InputField'
+import { InputFieldSubject } from './InputFieldSubject'
+import { Provider } from 'react-redux'
+import { counterReducer } from './store'
+import { createStore, applyMiddleware } from 'redux'
+import { createEpicMiddleware, combineEpics } from 'redux-observable'
+import { debounceTime, filter, mapTo } from 'rxjs/operators'
+import { ObsComponent } from './ObsComponent'
+
+const addEpic = (action$) => action$
+    .pipe(
+        filter(action => action.type === 'E_ADD'),
+        debounceTime(500),
+        mapTo({type: 'ADD'})
+    )
+const subEpic = (action$) => action$
+    .pipe(
+        filter(action => action.type === 'E_SUB'),
+        debounceTime(500),
+        mapTo({type: 'SUB'})
+    )
+
+const epicMiddleware = createEpicMiddleware();
+const store = createStore(counterReducer, applyMiddleware(epicMiddleware))
+epicMiddleware.run(
+    combineEpics(addEpic, subEpic)
+);
+
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Provider store={store}>
+    <div>
+        <InputField/>
+        <InputFieldSubject/>
+        <ObsComponent/>
     </div>
+      </Provider>
   );
 }
 
